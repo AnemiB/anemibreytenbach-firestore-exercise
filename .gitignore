@@ -42,3 +42,6 @@ firebase-debug.log
 firestore-debug.log
 firebase.json
 .firebaserc
+
+.env
+
