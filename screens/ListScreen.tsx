@@ -1,66 +1,90 @@
-import { Pressable, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import React from 'react'
-import { AntDesign } from '@expo/vector-icons';
-import { Entypo } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { SafeAreaView, StyleSheet, Text, ScrollView, TouchableOpacity, } from "react-native";
+import React, { useState, useCallback } from "react";
+import { AntDesign, Entypo } from "@expo/vector-icons";
+import { useFocusEffect, useNavigation, } from "@react-navigation/native";
+import { getMyBucketList, BucketItem, } from "../DbService";
 
 const ListScreen = () => {
+  const navigation = useNavigation<any>();
+  const [items, setItems] = useState<BucketItem[]>([]);
 
-  const navigation:any = useNavigation();
+  const load = async () => {
+    const data = await getMyBucketList();
+    setItems(data);
+  };
 
-  const goToAdd = () => { navigation.navigate("Add") }
+  useFocusEffect(useCallback(() => {
+    load();
+  }, []));
 
   return (
-    <SafeAreaView>
-        <View  style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => navigation.navigate("Add")}
+      >
+        <Entypo name="bucket" size={18} color="green" />
+        <Text style={styles.addText}>Add</Text>
+      </TouchableOpacity>
 
-            <Pressable style={styles.addButton} onPress={goToAdd}>
-                <Text style={styles.addButtonText}>Add</Text>
-                <Entypo name="bucket" size={16} color="green" />
-            </Pressable>
-
-
-            {/* THIS WILL LOOP FOR EACH ITEM */}
-            <TouchableOpacity style={styles.card} onPress={() => navigation.navigate("Details")}>
-                <Text>Title</Text>
-                <AntDesign name="star" size={24} color="orange" />
+      <ScrollView>
+        {items.length > 0 ? (
+          items.map((it) => (
+            <TouchableOpacity
+              key={it.id}
+              style={styles.card}
+              onPress={() => navigation.navigate("Details", { item: it })}
+            >
+              <Text
+                style={
+                  it.isCompleted
+                    ? { textDecorationLine: "line-through", color: "#999" }
+                    : {}
+                }
+              >
+                {it.title}
+              </Text>
+              {it.priority && <AntDesign name="star" size={20} color="orange" />}
             </TouchableOpacity>
-            {/* END LOOP */}
-        </View>
-       
+          ))
+        ) : (
+          <Text style={{ textAlign: "center", marginTop: 40 }}>
+            No items found.
+          </Text>
+        )}
+      </ScrollView>
     </SafeAreaView>
-  )
-}
+  );
+};
 
-export default ListScreen
+export default ListScreen;
 
 const styles = StyleSheet.create({
-    container: {
-        padding: 20
-    },
-    card: {
-        width: '100%',
-        backgroundColor: 'white',
-        padding: 15,
-        display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between'
-    },
-    addButton: {
-        backgroundColor: 'white',
-        borderColor: 'green',
-        borderWidth: 2,
-        padding: 10,
-        marginBottom: 20,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 5
-    },
-    addButtonText: {
-        textAlign: 'center',
-        color: 'green',
-        fontWeight: 'bold'
-    }
-})
+  container: { flex: 1, 
+    padding: 20 
+},
+  addButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "green",
+    padding: 10,
+    borderRadius: 4,
+    marginBottom: 20,
+    justifyContent: "center",
+  },
+  addText: { 
+    color: "green", 
+    marginLeft: 8, 
+    fontWeight: "bold" 
+},
+  card: {
+    padding: 15,
+    backgroundColor: "#fff",
+    marginBottom: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderRadius: 4,
+  },
+});
